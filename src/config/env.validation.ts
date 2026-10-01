@@ -8,4 +8,6 @@ export const envValidationSchema = Joi.object({
   PORT: Joi.number().port().default(3000),
 
   API_PREFIX: Joi.string().default('api'),
+
+  MONGO_URI: Joi.string().uri().required(),
 });
