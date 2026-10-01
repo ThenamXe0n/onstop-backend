@@ -9,6 +9,7 @@ import * as argon2 from 'argon2';
 import { LoginDto } from './dto/login.dto';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @Injectable()
 export class AuthService {
@@ -84,5 +85,62 @@ export class AuthService {
       accessToken,
       refreshToken,
     };
+  }
+
+  async refresh(refreshToken: string) {
+    let payload: {
+      sub: string;
+      email: string;
+      role: string;
+    };
+
+    try {
+      payload = await this.jwtService.verifyAsync(refreshToken, {
+        secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
+      });
+
+      const user = await this.usersService.findByIdWithRefreshToken(
+        payload.sub,
+      );
+      if (!user || !user.refreshTokenHash) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      const refreshTokenValid = await argon2.verify(
+        user.refreshTokenHash,
+        refreshToken,
+      );
+      if (!refreshTokenValid) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      const newPayload = {
+        sub: user._id.toString(),
+        email: user.email,
+        role: user.role,
+      };
+
+      const accessToken = await this.jwtService.signAsync(newPayload);
+      const newRefreshToken = await this.jwtService.signAsync(newPayload, {
+        secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
+        expiresIn: this.configService.getOrThrow<string>(
+          'JWT_REFRESH_EXPIRES_IN',
+        ) as JwtSignOptions['expiresIn'],
+      });
+
+      const newRefreshTokenHash = await argon2.hash(newRefreshToken);
+
+      await this.usersService.updateRefreshTokenHash(
+        user._id.toString(),
+        newRefreshTokenHash,
+      );
+
+      return {
+        accessToken,
+        refreshToken: newRefreshToken,
+      };
+    } catch {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
   }
 }
