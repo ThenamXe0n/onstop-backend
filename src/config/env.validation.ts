@@ -10,4 +10,8 @@ export const envValidationSchema = Joi.object({
   API_PREFIX: Joi.string().default('api'),
 
   MONGO_URI: Joi.string().uri().required(),
+
+  JWT_ACCESS_SECRET: Joi.string().min(32).required(),
+
+  JWT_ACCESS_EXPIRES_IN: Joi.string().default('15m'),
 });

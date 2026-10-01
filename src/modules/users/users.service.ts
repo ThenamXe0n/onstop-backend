@@ -31,4 +31,12 @@ export class UsersService {
   async findByEmail(email: string) {
     return this.userModel.findOne({ email }).exec();
   }
+
+  async findByEmailWithPassword(email: string): Promise<UserDocument | null> {
+    return this.userModel
+      .findOne({
+        email: email.toLowerCase(),
+      })
+      .select('+password');
+  }
 }
