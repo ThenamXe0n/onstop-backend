@@ -143,4 +143,13 @@ export class AuthService {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
   }
+
+  // logout
+  async logout(userId: string) {
+    await this.usersService.updateRefreshTokenHash(userId, null);
+
+    return {
+      message: 'Logged out successfully',
+    };
+  }
 }
