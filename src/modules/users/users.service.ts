@@ -27,4 +27,8 @@ export class UsersService {
   async findById(id: string) {
     return this.userModel.findById(id).exec();
   }
+
+  async findByEmail(email: string) {
+    return this.userModel.findOne({ email }).exec();
+  }
 }
