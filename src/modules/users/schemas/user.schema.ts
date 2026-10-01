@@ -21,7 +21,6 @@ export class User {
 
   @Prop({
     required: true,
-    unique: true,
     lowercase: true,
     trim: true,
   })
@@ -29,6 +28,7 @@ export class User {
 
   @Prop({
     required: true,
+    select: false,
   })
   password: string;
 
@@ -55,3 +55,7 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+// index creation
+
+UserSchema.index({ email: 1 }, { unique: true });
