@@ -39,4 +39,21 @@ export class UsersService {
       })
       .select('+password');
   }
+
+  async findByIdWithRefreshToken(userId: string): Promise<UserDocument | null> {
+    return this.userModel.findById(userId).select('+refreshTokenHash');
+  }
+
+  async updateRefreshTokenHash(
+    userId: string,
+    refreshTokenHash: string | null,
+  ) {
+    await this.userModel.findByIdAndUpdate(
+      userId,
+      {
+        refreshTokenHash,
+      },
+      { new: true },
+    );
+  }
 }
